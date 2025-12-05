@@ -11,7 +11,7 @@
 
         <div class="hero-actions">
             <a href="{{ url_for('staches') }}" class="btn secondary">View My Staches</a>
-            <a href="#" class="btn primary">Add New Item +</a>  {# will point to item-create later #}
+            <a href="{{ url_for('new_item') }}" class="btn primary">Add New Item +</a>
         </div>
     </section>
 
@@ -63,42 +63,45 @@
 
             <div class="item-grid">
                 {% for item in items %}
-                    <article class="info-card item-card">
-                        <div class="stache-card-header">
-                            <h2>{{ item.name }}</h2>
-                            <span class="chevron">❯</span>
-                        </div>
-
-                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">
-                            <strong>Stache:</strong> {{ item.stache.name }}<br>
-                            {% if item.category %}
-                                <strong>Category:</strong> {{ item.category }}<br>
-                            {% endif %}
-                            {% if item.location %}
-                                <strong>Location:</strong> {{ item.location }}<br>
-                            {% endif %}
-                            {% if item.condition %}
-                                <strong>Condition:</strong> {{ item.condition }}
-                            {% endif %}
-                        </p>
-
-                        {% if item.tags %}
-                            <div style="margin-top: 0.75rem; display: flex; flex-wrap: wrap; gap: 0.35rem;">
-                                {% for tag in item.tags %}
-                                    <span style="
-                                        font-size: 0.75rem;
-                                        padding: 0.15rem 0.45rem;
-                                        border-radius: 999px;
-                                        background: #020617;
-                                        border: 1px solid #374151;
-                                        color: #9ca3af;
-                                    ">
-                                        {{ tag }}
-                                    </span>
-                                {% endfor %}
+                    <!-- Make the whole card clickable -->
+                    <a href="{{ url_for('item_detail', item_id=item.id) }}" class="stache-card-link">
+                        <article class="info-card item-card">
+                            <div class="stache-card-header">
+                                <h2>{{ item.name }}</h2>
+                                <span class="chevron">❯</span>
                             </div>
-                        {% endif %}
-                    </article>
+
+                            <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                                <strong>Stache:</strong> {{ item.stache.name }}<br>
+                                {% if item.category %}
+                                    <strong>Category:</strong> {{ item.category }}<br>
+                                {% endif %}
+                                {% if item.location %}
+                                    <strong>Location:</strong> {{ item.location }}<br>
+                                {% endif %}
+                                {% if item.condition %}
+                                    <strong>Condition:</strong> {{ item.condition }}
+                                {% endif %}
+                            </p>
+
+                            {% if item.tags %}
+                                <div style="margin-top: 0.75rem; display: flex; flex-wrap: wrap; gap: 0.35rem;">
+                                    {% for tag in item.tags %}
+                                        <span style="
+                                            font-size: 0.75rem;
+                                            padding: 0.15rem 0.45rem;
+                                            border-radius: 999px;
+                                            background: #020617;
+                                            border: 1px solid #374151;
+                                            color: #9ca3af;
+                                        ">
+                                            {{ tag }}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </article>
+                    </a>
                 {% endfor %}
 
                 {% if items|length == 0 %}

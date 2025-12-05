@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Item – {{ item.name }}{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Edit Item</h1>
+    <p class="tagline">
+        Update details for <strong>{{ item.name }}</strong>.
+    </p>
+</section>
+
+<div class="content">
+    {% if error %}
+        <p style="color: #f87171; margin-bottom: 1rem;">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST" class="info-card item-form" style="max-width: 600px; margin: 0 auto;">
+        <div class="stache-card-header">
+            <h2>Item Details</h2>
+            <span class="chevron">❯</span>
+        </div>
+
+        <div class="form-group">
+            <label>Name</label>
+            <input type="text" name="name" class="input" required
+                   value="{{ item.name }}">
+        </div>
+
+        <div class="form-group">
+            <label>Stache</label>
+            <select name="stache_id" class="input" required>
+                <option value="">Select a Stache...</option>
+                {% for stache in staches %}
+                    <option value="{{ stache.id }}"
+                        {% if stache.id == item.stache_id %}selected{% endif %}>
+                        {{ stache.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Category</label>
+            <input type="text" name="category" class="input"
+                   value="{{ item.category or '' }}">
+        </div>
+
+        <div class="form-group">
+            <label>Location</label>
+            <input type="text" name="location" class="input"
+                   value="{{ item.location or '' }}">
+        </div>
+
+        <div class="form-group">
+            <label>Condition</label>
+            <input type="text" name="condition" class="input"
+                   value="{{ item.condition or '' }}">
+        </div>
+
+        <div class="form-group">
+            <label>Tags (comma separated)</label>
+            <input type="text" name="tags" class="input"
+                   placeholder="e.g. lightweight, 3-season"
+                   value="{{ tags_string or '' }}">
+        </div>
+
+        <div class="detail-actions">
+            <a href="{{ url_for('item_detail', item_id=item.id) }}" class="btn secondary">
+                Cancel
+            </a>
+            <button type="submit" class="btn primary">
+                Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

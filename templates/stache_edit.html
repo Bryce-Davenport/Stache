@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Stache – {{ stache.name }}{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Edit Stache</h1>
+    <p class="tagline">
+        Update details for <strong>{{ stache.name }}</strong>.
+    </p>
+</section>
+
+<div class="content">
+    {% if error %}
+        <p style="color: #f87171; margin-bottom: 1rem;">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST" class="info-card item-form" style="max-width: 600px; margin: 0 auto;">
+        <div class="stache-card-header">
+            <h2>Stache Details</h2>
+            <span class="chevron">❯</span>
+        </div>
+
+        <div class="form-group">
+            <label>Name</label>
+            <input type="text" name="name" class="input" required
+                   value="{{ stache.name }}">
+        </div>
+
+        <div class="form-group">
+            <label>Description</label>
+            <input type="text" name="description" class="input"
+                   value="{{ stache.description or '' }}">
+        </div>
+
+        <div class="form-group">
+            <label>Locations</label>
+            <input type="text" name="locations" class="input"
+                   placeholder="e.g. Gear Closet, Garage Shelf A"
+                   value="{{ stache.locations or '' }}">
+        </div>
+
+        <div class="form-group">
+            <label>Tags (comma separated)</label>
+            <input type="text" name="tags" class="input"
+                   placeholder="e.g. camping, tech"
+                   value="{{ tags_string or '' }}">
+        </div>
+
+        <div class="detail-actions">
+            <a href="{{ url_for('stache_detail', stache_slug=stache.slug) }}" class="btn secondary">
+                Cancel
+            </a>
+            <button type="submit" class="btn primary">
+                Save Changes
+            </button>
+        </div>
+    </form>
+        <!-- Danger zone: delete stache -->
+    <form action="{{ url_for('delete_stache', stache_slug=stache.slug) }}"
+          method="POST"
+          style="max-width: 600px; margin: 1rem auto 0; text-align: right;">
+        <button type="submit"
+                class="btn danger"
+                onclick="return confirm('Delete this stache and all items in it?');">
+            Delete Stache
+        </button>
+    </form>
+</div>
+{% endblock %}

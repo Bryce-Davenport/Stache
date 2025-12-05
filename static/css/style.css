@@ -2,7 +2,8 @@
 body {
     margin: 0;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: #111827; /* dark slate */
+    /*background: #111827; /* dark slate (OG) */
+    background: #111827eb; /* light slate */
     color: #e5e7eb;      /* light gray */
 }
 
@@ -176,6 +177,19 @@ body {
     margin-top: 0;
     margin-bottom: 0.5rem;
 }
+
+.item-form .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+.item-form label {
+    font-size: 0.9rem;
+    margin-bottom: 0.35rem;
+    color: #e5e7eb;
+}
+
 
 /* ---------- Auth / Login Page ---------- */
 
@@ -509,6 +523,88 @@ body {
     margin-top: 0;
 }
 
+.input {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #374151; /* gray-700 */
+    background-color: #111827; /* gray-900 */
+    color: #e5e7eb;            /* gray-200 */
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+    box-sizing: border-box;
+}
 
+.input::placeholder {
+    color: #6b7280; /* gray-500 */
+}
+
+.input:focus {
+    outline: none;
+    border-color: #f97316;     /* your orange accent */
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.3);
+}
+
+.btn.danger {
+    background-color: #b91c1c;
+    color: #f9fafb;
+}
+
+.btn.danger:hover {
+    background-color: #dc2626;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #111827;
+}
+
+.detail-row:last-of-type {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #9ca3af; /* muted gray */
+}
+
+.detail-value {
+    font-size: 0.95rem;
+    color: #e5e7eb;
+    text-align: right;
+}
+
+/* Tags row tweaks */
+.detail-row-tags .detail-value {
+    text-align: left;
+}
+
+.tag-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.tag-chip {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    background: #020617;
+    border: 1px solid #374151;
+    color: #9ca3af;
+}
+
+/* Actions row */
+.detail-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
 
 

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Item{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Add New Item</h1>
+    <p class="tagline">
+        Add a new item to your inventory and assign it to a Stache.
+    </p>
+</section>
+
+<div class="content">
+    {% if error %}
+        <p style="color: #f87171; margin-bottom: 1rem;">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST" class="info-card item-form" style="max-width: 600px; margin: 0 auto;">
+
+        <div class="stache-card-header">
+            <h2>Item Details</h2>
+            <span class="chevron">❯</span>
+        </div>
+
+        <div class="form-group">
+            <label>Name</label>
+            <input type="text" name="name" class="input" required>
+        </div>
+
+        <div class="form-group">
+            <label>Stache</label>
+            <select name="stache_id" class="input" required>
+                <option value="">Select a Stache...</option>
+                {% for stache in staches %}
+                    <option value="{{ stache.id }}">{{ stache.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Category</label>
+            <input type="text" name="category" class="input">
+        </div>
+
+        <div class="form-group">
+            <label>Location</label>
+            <input type="text" name="location" class="input">
+        </div>
+
+        <div class="form-group">
+            <label>Condition</label>
+            <input type="text" name="condition" class="input">
+        </div>
+
+        <div class="form-group">
+            <label>Tags (comma separated)</label>
+            <input type="text" name="tags" class="input" placeholder="e.g. lightweight, 3-season">
+        </div>
+
+        <button type="submit" class="btn primary" style="margin-top: 1rem;">
+            Add Item
+        </button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}New Stache{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Create New Stache</h1>
+    <p class="tagline">
+        Create a new collection to group related items – like Camping, Electronics, or Books.
+    </p>
+</section>
+
+<div class="content">
+    {% if error %}
+        <p style="color: #f87171; margin-bottom: 1rem;">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST" class="info-card item-form" style="max-width: 600px; margin: 0 auto;">
+        <div class="stache-card-header">
+            <h2>Stache Details</h2>
+            <span class="chevron">❯</span>
+        </div>
+
+        <div class="form-group">
+            <label>Name</label>
+            <input type="text" name="name" class="input" required>
+        </div>
+
+        <div class="form-group">
+            <label>Description</label>
+            <input type="text" name="description" class="input"
+                   placeholder="What lives in this stache?">
+        </div>
+
+        <div class="form-group">
+            <label>Locations</label>
+            <input type="text" name="locations" class="input"
+                   placeholder="e.g. Gear Closet, Garage Shelf A">
+        </div>
+
+        <div class="form-group">
+            <label>Tags (comma separated)</label>
+            <input type="text" name="tags" class="input"
+                   placeholder="e.g. camping, tech, reference">
+        </div>
+
+        <div class="detail-actions">
+            <a href="{{ url_for('staches') }}" class="btn secondary">
+                Cancel
+            </a>
+            <button type="submit" class="btn primary">
+                Create Stache
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

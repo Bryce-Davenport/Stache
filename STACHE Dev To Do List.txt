@@ -1,0 +1,53 @@
+STACHE – Dev To-Do List
+
+=== ITEMS ===
+[ ] Add "Edit Item" page
+    - Route: GET/POST /items/<item_id>/edit
+    - Prefill form with existing item data
+    - Reuse Add Item form styling
+[ ] Add "Delete Item" button
+    - Place on Edit Item page (similar to Delete Stache)
+    - POST /items/<item_id>/delete
+    - Confirm dialog before delete
+[ ] Allow moving an item to a different Stache
+    - In Edit Item form, Stache dropdown shows all staches
+    - Changing selection updates item.stache_id
+
+=== STACHES / ITEMS UX ===
+[ ] From Stache detail page, show items belonging to that stache (already working – sanity check)
+[ ] Add "New Item" from Stache detail
+    - Optional: preselect Stache in Add Item form using query param (?stache_id=...)
+[ ] Make sure delete flows don’t break when there are 0 items / 0 staches
+
+=== FILTERS & SEARCH ===
+[ ] Implement basic sorting for staches and items
+    - Sort by name A–Z / Z–A
+    - Sort by recently created (using created_at if available, or add it)
+[ ] Implement simple text search
+    - Search box on Items page
+    - Filter by item name, category, location, tags
+[ ] Wire up “Quick filters” section
+    - For now, make hardcoded filters (e.g., category = "Shelter", tag = "electronics")
+
+=== PROJECTS / TO-DOS ===
+[ ] Design minimal Projects data model in DB
+    - Table: projects (id, user_id, name, description, status)
+    - Optional: project_tasks table (id, project_id, name, done flag)
+[ ] Wire Projects page to real DB data (no more hard-coded projects)
+[ ] Link projects to staches or items (future)
+    - Maybe through tags, or a junction table
+
+=== POLISH / CLEANUP ===
+[ ] Do a quick pass on routes for consistency
+    - /staches, /staches/new, /staches/<slug>, /staches/<slug>/edit
+    - /items, /items/new, /items/<id>, /items/<id>/edit
+[ ] Make sure all redirects land somewhere sensible (no dead ends)
+[ ] Add “success” or “error” flash messaging (optional nice-to-have)
+[ ] Commit all changes with a clear message:
+    - "Add CRUD for items and staches; basic edit/delete flows"
+
+Nice-to-haves (if you have extra time):
+[ ] Add .btn.danger styling (global) for destructive actions
+[ ] Add created_at / updated_at timestamps to Stache and Item tables
+[ ] Small responsive tweaks for narrow windows / mobile
+

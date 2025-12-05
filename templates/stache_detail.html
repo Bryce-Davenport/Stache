@@ -3,128 +3,129 @@
 {% block title %}Stache – {{ stache.name }}{% endblock %}
 
 {% block content %}
-    <!-- Top header / hero for this stache -->
-    <section class="hero stache-hero">
-        <div class="stache-hero-main">
-            <h1>{{ stache.name }}</h1>
-            <p class="tagline">
-                {{ stache.description }}
-            </p>
-            <p class="stache-meta">
-                Created: {{ stache.created_at }} &middot;
-                Last Modified: {{ stache.updated_at }} &middot;
-                Items: {{ stache.item_count }}
+<section class="hero">
+    <h1>{{ stache.name }}</h1>
+
+    {% if stache.description %}
+        <p class="tagline">
+            {{ stache.description }}
+        </p>
+    {% endif %}
+
+    <p class="stache-meta">
+        {% if stache.locations %}
+            Locations: {{ stache.locations }} ·
+        {% endif %}
+        {{ items|length }} item{% if items|length != 1 %}s{% endif %}
+    </p>
+
+    <div class="hero-actions">
+        <a href="{{ url_for('edit_stache', stache_slug=stache.slug) }}" class="btn secondary">
+            Edit Stache
+        </a>
+        <a href="{{ url_for('new_item') }}" class="btn primary">
+            New Item +
+        </a>
+    </div>
+</section>
+
+
+<section class="stache-layout">
+    <aside class="stache-sidebar">
+        <h2>Filters</h2>
+
+        <div class="filter-group">
+            <h3>Sort</h3>
+            <button class="filter-pill">Last accessed</button>
+            <button class="filter-pill">Name A–Z</button>
+            <p class="filter-hint">
+                Sorting is visual for now – we’ll wire this to real data later.
             </p>
         </div>
 
-        <div class="stache-hero-actions">
-            <button class="btn secondary">Edit Stache</button>
-            <button class="btn primary">New Item +</button>
+        <div class="filter-group">
+            <h3>Quick filters</h3>
+            <button class="filter-pill">Shelter</button>
+            <button class="filter-pill">Cooking</button>
+            <button class="filter-pill">Electronics</button>
+            <p class="filter-hint">
+                These are just starter ideas; real filters will come later.
+            </p>
         </div>
-    </section>
 
-    <!-- Two-column layout: filters on left, items on right -->
-    <section class="stache-layout">
-        <aside class="stache-sidebar">
-            <h2>Filters</h2>
+        <div class="filter-group">
+            <h3>Tags</h3>
+            {% if stache.tags %}
+                <div class="filter-pill-row">
+                    {% for tag in stache.tags %}
+                        <button class="filter-pill">#{{ tag }}</button>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="filter-hint">No tags yet for this stache.</p>
+            {% endif %}
+        </div>
 
-            <div class="filter-group">
-                <h3>Category</h3>
-                <button class="filter-pill">All</button>
-                <button class="filter-pill">Shelter</button>
-                <button class="filter-pill">Sleeping</button>
-                <button class="filter-pill">Cooking</button>
-                <p class="filter-hint">
-                    These are just example categories. Users will define their own later.
-                </p>
-            </div>
+        <div class="filter-group">
+            <h3>Custom filters</h3>
+            <p class="filter-hint">
+                Future idea: save your own rules like “Trip-ready” or “Needs batteries”.
+            </p>
+        </div>
+    </aside>
 
-            <div class="filter-group">
-                <h3>Location</h3>
-                <button class="filter-pill">All</button>
-                <button class="filter-pill">Gear Closet</button>
-                <button class="filter-pill">Garage Shelf A</button>
-                <p class="filter-hint">
-                    Locations are user-defined and pulled from stored item data.
-                </p>
-            </div>
+    <section class="stache-main">
+        <div class="stache-main-header">
+            <h2>Items in {{ stache.name }}</h2>
+            <p class="stache-main-subtitle">
+                This view will eventually support searching, sorting, and filtering.
+            </p>
+        </div>
 
-            <div class="filter-group">
-                <h3>Condition</h3>
-                <button class="filter-pill">Any</button>
-                <button class="filter-pill">Like New</button>
-                <button class="filter-pill">Good</button>
-                <button class="filter-pill">Needs Repair</button>
-            </div>
-
-            <div class="filter-group">
-                <h3>Tags</h3>
-                {% if stache.tags %}
-                    <div class="filter-pill-row">
-                        {% for tag in stache.tags %}
-                            <button class="filter-pill">#{{ tag }}</button>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="filter-hint">No tags yet for this stache.</p>
-                {% endif %}
-            </div>
-
-            <div class="filter-group">
-                <h3>Custom Filters</h3>
-                <p class="filter-hint">
-                    In the future, you'll be able to create your own filter categories
-                    (e.g., “trip-ready”, “loaned out”, “needs batteries”).
-                </p>
-            </div>
-        </aside>
-
-        <section class="stache-main">
-            <div class="stache-main-header">
-                <h2>Items in {{ stache.name }}</h2>
-                <p class="stache-main-subtitle">
-                    This view will eventually support searching, sorting, and applying the filters on the left.
-                </p>
-            </div>
-
-            <div class="item-grid">
-                {% for item in stache.get("items", []) %}
+        <div class="item-grid">
+            {% for item in items %}
+                <a href="{{ url_for('item_detail', item_id=item.id) }}" class="stache-card-link">
                     <article class="info-card item-card">
-                        <h3>{{ item.name }}</h3>
-                        <p style="font-size: 0.9rem; margin-bottom: 0.5rem;">
-                            <strong>Category:</strong> {{ item.category }}<br>
-                            <strong>Location:</strong> {{ item.location }}<br>
-                            <strong>Condition:</strong> {{ item.condition }}
+                        <div class="stache-card-header">
+                            <h3>{{ item.name }}</h3>
+                            <span class="chevron">❯</span>
+                        </div>
+
+                        <p style="font-size: 0.9rem; margin-bottom: 0.5rem; margin-top: 0.5rem;">
+                            {% if item.category %}
+                                <strong>Category:</strong> {{ item.category }}<br>
+                            {% endif %}
+                            {% if item.location %}
+                                <strong>Location:</strong> {{ item.location }}<br>
+                            {% endif %}
+                            {% if item.condition %}
+                                <strong>Condition:</strong> {{ item.condition }}
+                            {% endif %}
                         </p>
 
                         {% if item.tags %}
                             <div style="margin-top: 0.25rem; display: flex; flex-wrap: wrap; gap: 0.3rem;">
                                 {% for tag in item.tags %}
-                                    <span style="
-                                        font-size: 0.75rem;
-                                        padding: 0.15rem 0.4rem;
-                                        border-radius: 999px;
-                                        background: #020617;
-                                        border: 1px solid #374151;
-                                        color: #9ca3af;
-                                    ">
-                                        #{{ tag }}
+                                    <span class="tag-chip">
+                                        {{ tag }}
                                     </span>
                                 {% endfor %}
                             </div>
                         {% endif %}
                     </article>
-                {% endfor %}
+                </a>
+            {% endfor %}
 
-                {% if not stache.get("items") %}
-                    <article class="info-card item-card">
-                        <h3>No items yet</h3>
-                        <p>
-                            Use the <strong>New Item +</strong> button above to start adding items to this stache.
-                        </p>
-                    </article>
-                {% endif %}
-            </div>
-        </section>
+            {% if items|length == 0 %}
+                <article class="info-card item-card">
+                    <h3>No items yet</h3>
+                    <p>
+                        Use the <strong>New Item +</strong> button above to start adding items to this stache.
+                    </p>
+                </article>
+            {% endif %}
+        </div>
     </section>
+</section>
 {% endblock %}
+
