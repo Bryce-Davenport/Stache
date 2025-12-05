@@ -1,0 +1,509 @@
+/* Overall page */
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #111827; /* dark slate */
+    color: #e5e7eb;      /* light gray */
+}
+
+/* Nav bar */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.5rem;
+
+    background-color: #020617;               /* base color */
+    background-image: url("/static/img/nav-topo3.svg");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+
+    border-bottom: 1px solid #1f2937;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+
+
+.navbar-brand .logo {
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.95rem;
+    color: #f97316; /* orange accent */
+}
+
+.navbar-links a {
+    margin-left: 1rem;
+    text-decoration: none;
+    color: #e5e7eb;
+    font-size: 0.9rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.navbar-links a:hover {
+    background: #1f2937;
+}
+
+/* Active nav link */
+.navbar-links a.active {
+    background: #111827;
+    color: #f97316; /* orange accent to match logo */
+}
+
+/* Layout */
+.content {
+    max-width: 960px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+/* Hero section */
+.hero h1 {
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.hero {
+    background: linear-gradient(90deg, #0f172a, #020617);
+    padding: 3rem;
+    border-radius: 0.75rem;
+}
+
+.tagline {
+    color: #9ca3af;
+    max-width: 36rem;
+}
+
+.hero-actions {
+    margin-top: 1.5rem;
+}
+
+.btn {
+    border: none;
+    cursor: pointer;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    margin-right: 0.75rem;
+
+    /* Layout */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Animation */
+    transition:
+        transform 0.15s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+/* Primary button (orange) */
+.btn.primary {
+    background: #f97316;
+    color: #111827;
+}
+
+/* Secondary button (dark) */
+.btn.secondary {
+    background: #1f2937;
+    color: #e5e7eb;
+}
+
+/* Hover animations (matches card hover feel) */
+.btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Make primary button brighten slightly on hover */
+.btn.primary:hover {
+    background: #fb8c3c; /* slightly lighter orange */
+}
+
+/* Make secondary button lighten a bit */
+.btn.secondary:hover {
+    background: #374151;
+}
+
+.btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+}
+
+
+
+/* Info cards */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+}
+
+.info-card {
+    background: #020617;
+    border-radius: 0.75rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid #1f2937;
+    
+    /* Hover animation properties */
+    transition: 
+        transform 0.15s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.info-card:hover {
+    transform: translateY(-6px);
+    background: #111827;
+    border-color: #4b5563;
+    box-shadow: 0 18px 28px rgba(0, 0, 0, 0.45);
+}
+
+
+.info-card h2 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+/* ---------- Auth / Login Page ---------- */
+
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 120px); /* nav + a bit of padding */
+}
+
+.auth-card {
+    background: #020617;
+    border-radius: 0.75rem;
+    padding: 2rem 2.5rem;
+    border: 1px solid #1f2937;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.9);
+    max-width: 420px;
+    width: 100%;
+}
+
+.auth-card h1 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    font-size: 1.6rem;
+}
+
+.auth-subtitle {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: #9ca3af;
+    font-size: 0.95rem;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.auth-form label {
+    font-size: 0.85rem;
+    color: #d1d5db;
+}
+
+.auth-form input {
+    background: #020617;
+    border: 1px solid #374151;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.6rem;
+    color: #e5e7eb;
+    font-size: 0.9rem;
+}
+
+.auth-form input:focus {
+    outline: none;
+    border-color: #f97316;
+    box-shadow: 0 0 0 1px #f97316;
+}
+
+.auth-button {
+    margin-top: 0.75rem;
+    width: 100%;
+    justify-content: center;
+}
+
+.auth-error {
+    background: rgba(127, 29, 29, 0.3);
+    border: 1px solid #b91c1c;
+    color: #fecaca;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.auth-hint {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.auth-hint code {
+    background: #030712;
+    padding: 0.1rem 0.25rem;
+    border-radius: 0.25rem;
+}
+
+/* ---------- Navbar layout tweaks ---------- */
+
+/* Make sure the links sit in a row */
+.navbar-links {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+/* ---------- Account dropdown ---------- */
+
+.account-menu {
+    position: relative;
+}
+
+/* Remove default button styling and make it look like a nav link */
+.account-toggle {
+    background: transparent;
+    border: none;
+    color: #e5e7eb;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.account-toggle:hover {
+    background: #1f2937;
+}
+
+.account-toggle:focus {
+    outline: none;
+    box-shadow: 0 0 0 1px #f97316;
+}
+
+.caret {
+    font-size: 0.7rem;
+}
+
+/* The dropdown panel */
+.account-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.4rem);
+
+    min-width: 210px;
+    background: #020617;
+    border: 1px solid #1f2937;
+    border-radius: 0.5rem;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6);
+
+    padding: 0.5rem 0;
+    display: none;              /* hidden by default */
+    flex-direction: column;
+    z-index: 20;
+}
+
+/* Show dropdown when the button (or dropdown) has focus */
+.account-menu:focus-within .account-dropdown {
+    display: flex;
+}
+
+/* Top text inside dropdown */
+.account-header {
+    padding: 0.4rem 0.75rem 0.5rem;
+    font-size: 0.8rem;
+    color: #9ca3af;
+    border-bottom: 1px solid #1f2937;
+}
+
+.account-name {
+    color: #e5e7eb;
+    font-weight: 600;
+}
+
+/* Items in dropdown */
+.account-item {
+    display: block;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.9rem;
+    color: #e5e7eb;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.account-item:hover {
+    background: #111827;
+}
+
+/* Logout styling (optional) */
+.account-logout {
+    color: #fecaca;
+}
+
+.account-logout:hover {
+    background: #7f1d1d;
+}
+
+/* Stache card header with chevron */
+.stache-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stache-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+/* Chevron icon */
+.chevron {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #6b7280; /* cool gray */
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.info-card:hover .chevron {
+    transform: translateX(4px);
+    color: #f97316; /* same orange as your logo */
+}
+
+/* ---------- Stache detail hero ---------- */
+
+.stache-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+}
+
+.stache-hero-main h1 {
+    margin-bottom: 0.5rem;
+}
+
+.stache-meta {
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    color: #9ca3af;
+}
+
+.stache-hero-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* ---------- Stache detail two-column layout ---------- */
+
+.stache-layout {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 2rem;
+    align-items: flex-start;
+}
+
+/* Left sidebar (filters) */
+.stache-sidebar {
+    width: 260px;
+    background: #020617;
+    border-radius: 0.75rem;
+    border: 1px solid #1f2937;
+    padding: 1rem 1.25rem;
+}
+
+.stache-sidebar h2 {
+    margin-top: 0;
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+}
+
+.filter-group {
+    margin-bottom: 1.25rem;
+}
+
+.filter-group h3 {
+    margin: 0 0 0.4rem;
+    font-size: 0.9rem;
+    color: #e5e7eb;
+}
+
+.filter-hint {
+    margin: 0.35rem 0 0;
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+/* Generic filter pills (future user-defined filters/categories) */
+.filter-pill {
+    background: #020617;
+    border: 1px solid #374151;
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.8rem;
+    color: #e5e7eb;
+    cursor: pointer;
+    margin: 0.1rem 0.2rem 0.1rem 0;
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.1s ease;
+}
+
+.filter-pill:hover {
+    background: #111827;
+    border-color: #f97316;
+    transform: translateY(-1px);
+}
+
+.filter-pill-row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+/* Right main content area (items) */
+.stache-main {
+    flex: 1;
+}
+
+.stache-main-header h2 {
+    margin: 0 0 0.25rem;
+}
+
+.stache-main-subtitle {
+    margin: 0 0 1rem;
+    font-size: 0.9rem;
+    color: #9ca3af;
+}
+
+.item-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+}
+
+.item-card h3 {
+    margin-top: 0;
+}
+
+
+
+

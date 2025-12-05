@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Stache – Projects{% endblock %}
+
+{% block content %}
+    <section class="hero">
+        <h1>Projects</h1>
+        <p class="tagline">
+            Track gear-related projects, repairs, and decluttering tasks so nothing falls through the cracks.
+        </p>
+
+        <div class="hero-actions">
+            <button class="btn primary">Create New Project +</button>
+        </div>
+    </section>
+
+    <section class="info-grid">
+        {% for project in projects %}
+            <article class="info-card">
+                <h2>{{ project.name }}</h2>
+                <p><strong>Status:</strong> {{ project.status }}</p>
+                <p>{{ project.notes }}</p>
+
+                <h3 style="font-size: 0.9rem; margin-top: 1rem;">Tasks</h3>
+                <ul style="padding-left: 1.2rem; margin-top: 0.4rem;">
+                    {% for task in project.tasks %}
+                        <li style="font-size: 0.9rem;">{{ task }}</li>
+                    {% endfor %}
+                </ul>
+            </article>
+        {% endfor %}
+
+        {% if projects|length == 0 %}
+            <article class="info-card">
+                <h2>No projects yet</h2>
+                <p>
+                    You can use this page to manage things like:
+                </p>
+                <ul>
+                    <li>Decluttering drives and storage bins</li>
+                    <li>Pre-trip packing checklists</li>
+                    <li>Gear repairs and upgrades</li>
+                </ul>
+            </article>
+        {% endif %}
+    </section>
+{% endblock %}

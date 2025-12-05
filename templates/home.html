@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Stache – Home{% endblock %}
+
+{% block content %}
+    <section class="hero">
+        <h1>Welcome to Stache</h1>
+        <p class="tagline">
+            A personal inventory to keep track of your gear, gadgets, and everything in between.
+        </p>
+
+        <div class="hero-actions">
+            <button class="btn primary">View My Staches</button>
+            <button class="btn secondary">Add New Item +</button>
+        </div>
+    </section>
+
+    <section class="info-grid">
+        <article class="info-card">
+            <h2>Stache To-Do</h2>
+            <p>Stay on top of projects related to your inventory.</p>
+            <ul>
+                <li>Declutter hard drives</li>
+                <li>Audit camping gear</li>
+                <li>List all tools in the closet</li>
+            </ul>
+        </article>
+
+        <article class="info-card">
+            <h2>Quick Stats</h2>
+            <p>(Future idea) Show how many items, staches, and maintenance reminders you have.</p>
+        </article>
+
+        <article class="info-card">
+            <h2>Maintenance</h2>
+            <p>(Future idea) Reminders for battery changes, inspections, and more.</p>
+        </article>
+    </section>
+{% endblock %}

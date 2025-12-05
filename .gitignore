@@ -1,0 +1,38 @@
+# --- Python / Flask ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+
+# Environment / secrets
+.env
+*.env
+
+# SQLite / local DBs
+*.sqlite3
+*.db
+
+# Flask instance folder (if you ever use it)
+instance/
+
+# Logs
+*.log
+
+# Test / coverage
+.coverage
+htmlcov/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/

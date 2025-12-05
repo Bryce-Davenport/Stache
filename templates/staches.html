@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Stache – Staches{% endblock %}
+
+{% block content %}
+    <section class="hero">
+        <h1>Staches</h1>
+        <p class="tagline">
+            Collections of related gear and belongings – like Camping, Electronics, and Books –
+            so you always know what you own and where it lives.
+        </p>
+
+        <div class="hero-actions">
+            <button class="btn primary">New Stache +</button>
+        </div>
+    </section>
+
+    <section class="info-grid">
+        {% for stache in staches %}
+            <a href="{{ url_for('stache_detail', stache_slug=stache.slug) }}" class="stache-card-link">
+                <article class="info-card">
+                    <div class="stache-card-header">
+                        <h2>{{ stache.name }}</h2>
+                        <span class="chevron">❯</span>
+                    </div>
+
+                    <p>{{ stache.description }}</p>
+
+                    <p style="font-size: 0.9rem; margin-top: 0.75rem;">
+                        <strong>Items:</strong> {{ stache.item_count }}<br>
+                        <strong>Locations:</strong> {{ stache.locations }}
+                    </p>
+
+                    {% if stache.tags %}
+                        <div style="margin-top: 0.75rem; display: flex; flex-wrap: wrap; gap: 0.35rem;">
+                            {% for tag in stache.tags %}
+                                <span style="
+                                    font-size: 0.75rem;
+                                    padding: 0.15rem 0.45rem;
+                                    border-radius: 999px;
+                                    background: #020617;
+                                    border: 1px solid #374151;
+                                    color: #9ca3af;
+                                ">
+                                    {{ tag }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </article>
+            </a>
+        {% endfor %}
+    </section>
+{% endblock %}

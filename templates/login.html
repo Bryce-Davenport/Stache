@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Stache – Login{% endblock %}
+
+{% block content %}
+    <section class="auth-container">
+        <div class="auth-card">
+            <h1>Sign in to Stache</h1>
+            <p class="auth-subtitle">Your personal inventory, secured to your account.</p>
+
+            {% if error %}
+                <div class="auth-error">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <form method="post" class="auth-form">
+                <label for="username">Username</label>
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="Enter username"
+                    required
+                >
+
+                <label for="password">Password</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter password"
+                    required
+                >
+
+                <button type="submit" class="btn primary auth-button">
+                    Log In
+                </button>
+            </form>
+
+            <p class="auth-hint">
+                (For now, use <code>bryce</code> / <code>stache123</code> — dev-only.)
+            </p>
+        </div>
+    </section>
+{% endblock %}

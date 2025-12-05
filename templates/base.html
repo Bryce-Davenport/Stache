@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Stache{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="navbar-brand">
+            <span class="logo">Stache</span>
+        </div>
+
+        <nav class="navbar-links">
+
+            {% if logged_in %}
+                <a href="{{ url_for('home') }}" 
+                   class="{% if active_page == 'home' %}active{% endif %}">
+                    Home
+                </a>
+                <a href="{{ url_for('projects') }}"
+                class="{% if active_page == 'projects' %}active{% endif %}">
+                    Projects
+                </a>
+                <a href="{{ url_for('staches') }}"
+                class="{% if active_page == 'staches' %}active{% endif %}">
+                    Staches
+                </a>
+
+                <a href="#">Items</a>
+
+                <!-- Account dropdown -->
+                <div class="account-menu">
+                    <button class="account-toggle">
+                        Account <span class="caret">▾</span>
+                    </button>
+
+                    <div class="account-dropdown">
+                        <div class="account-header">
+                            Signed in as <span class="account-name">{{ current_user }}</span>
+                        </div>
+
+                        <a href="#" class="account-item">Profile (Coming Soon)</a>
+                        <a href="#" class="account-item">Settings (Coming Soon)</a>
+
+                        <a href="{{ url_for('logout') }}" class="account-item account-logout">
+                            Logout
+                        </a>
+                    </div>
+                </div>
+
+            {% else %}
+                <a href="{{ url_for('login') }}">Login</a>
+            {% endif %}
+
+        </nav>
+    </header>
+
+    <main class="content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p>Stache © {{ 2025 }} — Alpine Labs</p>
+    </footer>
+</body>
+</html>
+
