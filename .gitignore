@@ -19,7 +19,7 @@ venv/
 *.sqlite3
 *.db
 
-# Flask instance folder (if you ever use it)
+# Flask instance folder
 instance/
 
 # Logs

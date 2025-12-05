@@ -13,7 +13,8 @@ A Stache is a personal container that stores items of your choice. Want a Stache
 
 Stache allows users to create numerous private inventories tied to their accounts. 
 
-<img width="1386" height="816" alt="image" src="https://github.com/user-attachments/assets/5466c3ee-ae7c-4b63-b6bd-f3e8527bb698" />
+<img src="./stache_diagram.png" alt="Stache Diagram" width="700">
+
 
 
 # Get Reminded About Maintenance 
