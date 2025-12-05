@@ -10,14 +10,17 @@
         </p>
 
         <div class="hero-actions">
-            <button class="btn primary">View My Staches</button>
-            <button class="btn secondary">Add New Item +</button>
+            <a href="{{ url_for('staches') }}" class="btn primary">View My Staches</a>
+            <a href="{{ url_for('items') }}" class="btn secondary">View My Items</a>
         </div>
     </section>
 
     <section class="info-grid">
         <article class="info-card">
-            <h2>Stache To-Do</h2>
+            <div class="stache-card-header">
+                <h2>Stache To-Do</h2>
+                <span class="chevron">❯</span>
+            </div>
             <p>Stay on top of projects related to your inventory.</p>
             <ul>
                 <li>Declutter hard drives</li>
@@ -27,12 +30,18 @@
         </article>
 
         <article class="info-card">
-            <h2>Quick Stats</h2>
+            <div class="stache-card-header">
+                <h2>Quick Stats</h2>
+                <span class="chevron">❯</span>
+            </div>
             <p>(Future idea) Show how many items, staches, and maintenance reminders you have.</p>
         </article>
 
         <article class="info-card">
-            <h2>Maintenance</h2>
+            <div class="stache-card-header">
+                <h2>Maintenance</h2>
+                <span class="chevron">❯</span>
+            </div>
             <p>(Future idea) Reminders for battery changes, inspections, and more.</p>
         </article>
     </section>

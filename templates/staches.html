@@ -15,40 +15,88 @@
         </div>
     </section>
 
-    <section class="info-grid">
-        {% for stache in staches %}
-            <a href="{{ url_for('stache_detail', stache_slug=stache.slug) }}" class="stache-card-link">
-                <article class="info-card">
-                    <div class="stache-card-header">
-                        <h2>{{ stache.name }}</h2>
-                        <span class="chevron">❯</span>
-                    </div>
+    <div class="stache-layout">
+        <!-- Left sidebar: filters -->
+        <aside class="stache-sidebar">
+            <h2>Filters</h2>
 
-                    <p>{{ stache.description }}</p>
+            <div class="filter-group">
+                <h3>Sort by</h3>
+                <div class="filter-pill-row">
+                    <button class="filter-pill" type="button">Last accessed</button>
+                    <button class="filter-pill" type="button">Recently created</button>
+                    <button class="filter-pill" type="button">Name A–Z</button>
+                </div>
+                <p class="filter-hint">
+                    Sorting is visual for now – we’ll wire this up to real data later.
+                </p>
+            </div>
 
-                    <p style="font-size: 0.9rem; margin-top: 0.75rem;">
-                        <strong>Items:</strong> {{ stache.item_count }}<br>
-                        <strong>Locations:</strong> {{ stache.locations }}
-                    </p>
+            <div class="filter-group">
+                <h3>Quick filters</h3>
+                <div class="filter-pill-row">
+                    <button class="filter-pill" type="button">Outdoor gear</button>
+                    <button class="filter-pill" type="button">Tech / electronics</button>
+                    <button class="filter-pill" type="button">Books / media</button>
+                </div>
+                <p class="filter-hint">
+                    These are just starter ideas; custom filters will live here.
+                </p>
+            </div>
 
-                    {% if stache.tags %}
-                        <div style="margin-top: 0.75rem; display: flex; flex-wrap: wrap; gap: 0.35rem;">
-                            {% for tag in stache.tags %}
-                                <span style="
-                                    font-size: 0.75rem;
-                                    padding: 0.15rem 0.45rem;
-                                    border-radius: 999px;
-                                    background: #020617;
-                                    border: 1px solid #374151;
-                                    color: #9ca3af;
-                                ">
-                                    {{ tag }}
-                                </span>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </article>
-            </a>
-        {% endfor %}
-    </section>
+            <div class="filter-group">
+                <h3>Custom filters</h3>
+                <p class="filter-hint">
+                    Future feature: save your own rules like “Garage only” or “Needs maintenance”.
+                </p>
+            </div>
+        </aside>
+
+        <!-- Right: main list of Staches -->
+        <div class="stache-main">
+            <div class="stache-main-header">
+                <h2>All Staches</h2>
+                <p class="stache-main-subtitle">
+                    You currently have {{ staches|length }} staches.
+                </p>
+            </div>
+
+            <section class="info-grid">
+                {% for stache in staches %}
+                    <a href="{{ url_for('stache_detail', stache_slug=stache.slug) }}" class="stache-card-link">
+                        <article class="info-card">
+                            <div class="stache-card-header">
+                                <h2>{{ stache.name }}</h2>
+                                <span class="chevron">❯</span>
+                            </div>
+
+                            <p>{{ stache.description }}</p>
+
+                            <p style="font-size: 0.9rem; margin-top: 0.75rem;">
+                                <strong>Items:</strong> {{ stache.item_count }}<br>
+                                <strong>Locations:</strong> {{ stache.locations }}
+                            </p>
+
+                            {% if stache.tags %}
+                                <div style="margin-top: 0.75rem; display: flex; flex-wrap: wrap; gap: 0.35rem;">
+                                    {% for tag in stache.tags %}
+                                        <span style="
+                                            font-size: 0.75rem;
+                                            padding: 0.15rem 0.45rem;
+                                            border-radius: 999px;
+                                            background: #020617;
+                                            border: 1px solid #374151;
+                                            color: #9ca3af;
+                                        ">
+                                            {{ tag }}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </article>
+                    </a>
+                {% endfor %}
+            </section>
+        </div>
+    </div>
 {% endblock %}

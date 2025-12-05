@@ -56,10 +56,15 @@ body {
 
 /* Layout */
 .content {
-    max-width: 960px;
-    margin: 2rem auto;
-    padding: 0 1rem;
+    /* grow with the window, but keep ~2rem margin on each side */
+    width: min(100% - 4rem, 1400px);
+    margin: 2.5rem auto;
+    padding: 0 2rem;
+    box-sizing: border-box;
 }
+
+
+
 
 /* Hero section */
 .hero h1 {

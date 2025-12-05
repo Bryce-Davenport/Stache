@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Stache – Items{% endblock %}
+
+{% block content %}
+    <section class="hero">
+        <h1>Items</h1>
+        <p class="tagline">
+            A cross-Stache view of your gear and belongings – see everything in one place.
+        </p>
+
+        <div class="hero-actions">
+            <a href="{{ url_for('staches') }}" class="btn secondary">View My Staches</a>
+            <a href="#" class="btn primary">Add New Item +</a>  {# will point to item-create later #}
+        </div>
+    </section>
+
+    <div class="stache-layout">
+        <!-- Left sidebar: filters -->
+        <aside class="stache-sidebar">
+            <h2>Filters</h2>
+
+            <div class="filter-group">
+                <h3>Sort by</h3>
+                <div class="filter-pill-row">
+                    <button class="filter-pill" type="button">Last accessed</button>
+                    <button class="filter-pill" type="button">Recently added</button>
+                    <button class="filter-pill" type="button">Name A–Z</button>
+                </div>
+                <p class="filter-hint">
+                    Sorting logic will come later; for now this is layout only.
+                </p>
+            </div>
+
+            <div class="filter-group">
+                <h3>Common filters</h3>
+                <div class="filter-pill-row">
+                    <button class="filter-pill" type="button">Camping gear</button>
+                    <button class="filter-pill" type="button">Electronics</button>
+                    <button class="filter-pill" type="button">Books / reference</button>
+                </div>
+                <p class="filter-hint">
+                    Later we can make these dynamic based on your actual Staches and categories.
+                </p>
+            </div>
+
+            <div class="filter-group">
+                <h3>Custom filters</h3>
+                <p class="filter-hint">
+                    Future feature: user-defined rules (tags, locations, conditions, etc.) saved here.
+                </p>
+            </div>
+        </aside>
+
+        <!-- Right: main list of Items -->
+        <div class="stache-main">
+            <div class="stache-main-header">
+                <h2>All Items</h2>
+                <p class="stache-main-subtitle">
+                    You currently have {{ items|length }} items across your Staches.
+                </p>
+            </div>
+
+            <div class="item-grid">
+                {% for item in items %}
+                    <article class="info-card item-card">
+                        <div class="stache-card-header">
+                            <h2>{{ item.name }}</h2>
+                            <span class="chevron">❯</span>
+                        </div>
+
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                            <strong>Stache:</strong> {{ item.stache.name }}<br>
+                            {% if item.category %}
+                                <strong>Category:</strong> {{ item.category }}<br>
+                            {% endif %}
+                            {% if item.location %}
+                                <strong>Location:</strong> {{ item.location }}<br>
+                            {% endif %}
+                            {% if item.condition %}
+                                <strong>Condition:</strong> {{ item.condition }}
+                            {% endif %}
+                        </p>
+
+                        {% if item.tags %}
+                            <div style="margin-top: 0.75rem; display: flex; flex-wrap: wrap; gap: 0.35rem;">
+                                {% for tag in item.tags %}
+                                    <span style="
+                                        font-size: 0.75rem;
+                                        padding: 0.15rem 0.45rem;
+                                        border-radius: 999px;
+                                        background: #020617;
+                                        border: 1px solid #374151;
+                                        color: #9ca3af;
+                                    ">
+                                        {{ tag }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+
+                {% if items|length == 0 %}
+                    <article class="info-card">
+                        <h2>No items yet</h2>
+                        <p>Add a Stache and start logging your gear and belongings.</p>
+                    </article>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

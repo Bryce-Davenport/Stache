@@ -1,155 +1,82 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from datetime import datetime
 
+from models import db, User, Stache, Item, Project, ProjectTask
+
 app = Flask(__name__)
 
-def get_demo_staches():
-    # Temporary starter data; later this will come from a database
-    return [
-        {
-            "slug": "camping",
-            "name": "Camping",
-            "description": "Tents, sleeping systems, cook kits, and other backcountry essentials.",
-            "item_count": 18,
-            "locations": "Gear Closet, Garage Shelf A",
-            "tags": ["outdoors", "overnight", "3-season"],
-            "created_at": "2025-01-03",
-            "updated_at": "2025-02-02",
-            "items": [
-                {
-                    "name": "1P Tent",
-                    "category": "Shelter",
-                    "location": "Gear Closet",
-                    "condition": "Good",
-                    "tags": ["3-season", "backpacking"]
-                },
-                {
-                    "name": "Sleeping Pad",
-                    "category": "Sleeping",
-                    "location": "Gear Closet",
-                    "condition": "Like New",
-                    "tags": ["insulated"]
-                },
-                {
-                    "name": "Stove Kit",
-                    "category": "Cooking",
-                    "location": "Garage Shelf A",
-                    "condition": "Good",
-                    "tags": ["canister", "lightweight"]
-                },
-            ],
-        },
-        {
-            "slug": "electronics",
-            "name": "Electronics",
-            "description": "Cables, adapters, chargers, small devices, and troubleshooting gear.",
-            "item_count": 32,
-            "locations": "Desk Drawer, Tech Bin",
-            "tags": ["tech", "everyday", "tools"],
-            "created_at": "2025-01-10",
-            "updated_at": "2025-01-25",
-            "items": [
-                {
-                    "name": "USB-C Hub",
-                    "category": "Adapters",
-                    "location": "Desk Drawer",
-                    "condition": "Good",
-                    "tags": ["usb-c", "travel"]
-                },
-                {
-                    "name": "Portable SSD",
-                    "category": "Storage",
-                    "location": "Tech Bin",
-                    "condition": "Good",
-                    "tags": ["backup"]
-                },
-            ],
-        },
-        {
-            "slug": "books",
-            "name": "Books",
-            "description": "Physical books worth tracking – reference, tech, and favorite reads.",
-            "item_count": 12,
-            "locations": "Bookshelf, Nightstand",
-            "tags": ["reading", "reference"],
-            "created_at": "2024-12-15",
-            "updated_at": "2025-01-05",
-            "items": [
-                {
-                    "name": "Networking Fundamentals",
-                    "category": "Reference",
-                    "location": "Bookshelf",
-                    "condition": "Good",
-                    "tags": ["networking", "tech"]
-                }
-            ],
-        },
-    ]
+# SQLite now, Postgres later
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///stache.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # -- Development Only --
 app.secret_key = "change_this_secret_key_later"
-# ----- Helper: check if user is logged in -----
+
+# Initialize SQLAlchemy with this app
+db.init_app(app)
+
+
+# ----- Helpers -----
 def is_logged_in():
+    """Return True if a user is logged in based on the session."""
     return "user" in session
+
+
+def get_current_user():
+    """Return the current User object from the database, or None."""
+    username = session.get("user")
+    if not username:
+        return None
+    return User.query.filter_by(username=username).first()
 
 
 @app.context_processor
 def inject_user():
+    """Inject login state and current user into all templates."""
     return dict(
         logged_in=is_logged_in(),
         current_user=session.get("user")
     )
 
-# -- Routes --
+
+# ----- Routes -----
 @app.route("/")
 def home():
     if not is_logged_in():
         return redirect(url_for("login"))
     return render_template("home.html", active_page="home")
 
+
 @app.route("/projects")
 def projects():
     if not is_logged_in():
         return redirect(url_for("login"))
 
-    # Temporary in-memory demo data (no database yet)
-    demo_projects = [
-        {
-            "name": "Declutter Hard Drives",
-            "status": "In Progress",
-            "notes": "Sort loose SSDs and HDDs, label everything.",
-            "tasks": [
-                "[ ] Gather all loose drives",
-                "[ ] Plug into USB dock and check health",
-                "[ ] Label with capacity + purpose",
-                "[ ] Update Stache entries for each drive",
-            ],
-        },
-        {
-            "name": "Dial In Camping Cook Kit",
-            "status": "Planning",
-            "notes": "Consolidate stoves, pots, and utensils into one bin.",
-            "tasks": [
-                "[ ] List all stoves and fuel types",
-                "[ ] Decide on primary cook kit",
-                "[ ] Create 'Camping Kitchen' stache",
-                "[ ] Add items and locations",
-            ],
-        },
-    ]
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+
+    # Load projects from the database for the logged-in user
+    projects = Project.query.filter_by(user_id=user.id).all()
 
     return render_template(
         "projects.html",
         active_page="projects",
-        projects=demo_projects
+        projects=projects
     )
+
 
 @app.route("/staches")
 def staches():
     if not is_logged_in():
         return redirect(url_for("login"))
 
-    staches = get_demo_staches()
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+
+    # Load staches from the database for this user
+    staches = Stache.query.filter_by(user_id=user.id).all()
 
     return render_template(
         "staches.html",
@@ -157,13 +84,18 @@ def staches():
         staches=staches
     )
 
+
 @app.route("/staches/<stache_slug>")
 def stache_detail(stache_slug):
     if not is_logged_in():
         return redirect(url_for("login"))
 
-    staches = get_demo_staches()
-    stache = next((s for s in staches if s["slug"] == stache_slug), None)
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+
+    # Look up this stache by slug for the current user
+    stache = Stache.query.filter_by(user_id=user.id, slug=stache_slug).first()
 
     if stache is None:
         # For now, a simple 404; later we can make a nice error page
@@ -175,6 +107,30 @@ def stache_detail(stache_slug):
         stache=stache
     )
 
+@app.route("/items")
+def items():
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+
+    # All items belonging to this user's staches
+    items = (
+        Item.query
+        .join(Stache)
+        .filter(Stache.user_id == user.id)
+        .all()
+    )
+
+    return render_template(
+        "items.html",
+        active_page="items",
+        items=items,
+    )
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error = None
@@ -183,9 +139,16 @@ def login():
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "").strip()
 
-        # TEMPORARY: hardcoded user
-        # Later this will check a database.
+        # TEMPORARY: hardcoded credentials, but user row is stored in DB
+        # Later this will check a database-stored password hash.
         if username == "bryce" and password == "stache123":
+            # Ensure a matching User row exists in the database
+            user = User.query.filter_by(username=username).first()
+            if not user:
+                user = User(username=username, password_hash="dev-only")
+                db.session.add(user)
+                db.session.commit()
+
             session["user"] = username
             return redirect(url_for("home"))
         else:
@@ -194,6 +157,7 @@ def login():
     # GET request or failed POST
     return render_template("login.html", error=error)
 
+
 @app.route("/logout")
 def logout():
     session.pop("user", None)
@@ -201,4 +165,5 @@ def logout():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8000) # http:127.0.0..1:port
+    # Requires models.py + seed_dev.py already run to create stache.db
+    app.run(debug=True, port=8000)  # http:127.0.0.1:8000
