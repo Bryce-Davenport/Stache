@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}New Project{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Create New Project</h1>
+    <p class="tagline">
+        Link a project to a Stache and track its to-do list as you go.
+    </p>
+</section>
+
+<div class="content">
+    {% if error %}
+        <p style="color: #f87171; margin-bottom: 1rem;">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST" class="info-card item-form" style="max-width: 600px; margin: 0 auto;">
+        <div class="stache-card-header">
+            <h2>Project Details</h2>
+            <span class="chevron">❯</span>
+        </div>
+
+        <div class="form-group">
+            <label>Name</label>
+            <input type="text" name="name" class="input" required>
+        </div>
+
+        <div class="form-group">
+            <label>Description</label>
+            <input type="text" name="description" class="input"
+                   placeholder="What are you trying to accomplish?">
+        </div>
+
+        <div class="form-group">
+            <label>Stache</label>
+            <select name="stache_id" class="input" required>
+                <option value="">Select a Stache...</option>
+                {% for stache in staches %}
+                    <option value="{{ stache.id }}">{{ stache.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Status</label>
+            <select name="status" class="input">
+                <option value="in-progress" selected>In progress</option>
+                <option value="completed">Completed</option>
+            </select>
+        </div>
+
+        <div class="detail-actions">
+            <a href="{{ url_for('projects') }}" class="btn secondary">
+                Cancel
+            </a>
+            <button type="submit" class="btn primary">
+                Create Project
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

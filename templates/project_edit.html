@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Project – {{ project.name }}{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Edit Project</h1>
+    <p class="tagline">
+        Update details for <strong>{{ project.name }}</strong>.
+    </p>
+</section>
+
+<div class="content">
+    {% if error %}
+        <p style="color: #f87171; margin-bottom: 1rem;">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST" class="info-card item-form" style="max-width: 700px; margin: 0 auto;">
+        <div class="stache-card-header">
+            <h2>Project Details</h2>
+            <span class="chevron">❯</span>
+        </div>
+
+        <!-- Name -->
+        <div class="form-group">
+            <label>Project name</label>
+            <input
+                type="text"
+                name="name"
+                class="input"
+                required
+                value="{{ project.name }}"
+            >
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+            <label>Description</label>
+            <textarea
+                name="description"
+                class="input"
+                rows="3"
+                placeholder="What is this project about?"
+            >{{ project.description or "" }}</textarea>
+        </div>
+
+        <!-- Linked Stache -->
+        <div class="form-group">
+            <label>Linked stache</label>
+            <select name="stache_id" class="input" required>
+                <option value="">Select a stache…</option>
+                {% for stache in staches %}
+                    <option value="{{ stache.id }}"
+                        {% if project.stache_id == stache.id %}selected{% endif %}>
+                        {{ stache.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Status (keep in sync with other status options) -->
+        <div class="form-group">
+            <label>Status</label>
+            <select name="status" class="input">
+                <option value="planning" {% if project.status == "planning" %}selected{% endif %}>Planning</option>
+                <option value="in_progress" {% if project.status == "in_progress" %}selected{% endif %}>In progress</option>
+                <option value="completed" {% if project.status == "completed" %}selected{% endif %}>Completed</option>
+            </select>
+        </div>
+
+        <div class="detail-actions">
+            <a href="{{ url_for('project_detail', project_id=project.id) }}" class="btn secondary">
+                Cancel
+            </a>
+            <button type="submit" class="btn primary">
+                Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

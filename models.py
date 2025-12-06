@@ -25,7 +25,7 @@ class Stache(db.Model):
     slug = db.Column(db.String(120), nullable=False, unique=True)
     description = db.Column(db.Text)
     locations = db.Column(db.String(255))
-    tags_csv = db.Column(db.String(255))  # "outdoors, overnight, 3-season"
+    tags_csv = db.Column(db.String(255)) 
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(
@@ -70,18 +70,31 @@ class Project(db.Model):
     __tablename__ = "projects"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
 
-    name = db.Column(db.String(120), nullable=False)
-    status = db.Column(db.String(40), default="Planning")  # Planning/In Progress/Done
-    notes = db.Column(db.Text)
+    # mark as real foreign keys
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    stache_id = db.Column(db.Integer, db.ForeignKey("staches.id"), nullable=False)
+
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    status = db.Column(db.String(20), default="in-progress")  # 'in-progress' or 'completed'
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
     )
 
-    user = db.relationship("User", backref=db.backref("projects", lazy=True))
-    tasks = db.relationship("ProjectTask", backref="project", lazy=True)
+    # relationships
+    user = db.relationship("User", backref="projects")
+    stache = db.relationship("Stache", backref="projects")
+
+    tasks = db.relationship(
+        "ProjectTask",
+        backref="project",
+        cascade="all, delete-orphan",
+    )
 
 
 class ProjectTask(db.Model):
@@ -90,5 +103,12 @@ class ProjectTask(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey("projects.id"), nullable=False)
 
+    # correct table name here:
+    item_id = db.Column(db.Integer, db.ForeignKey("items.id"), nullable=True)
+
     description = db.Column(db.String(255), nullable=False)
-    is_done = db.Column(db.Boolean, default=False)
+    completed = db.Column(db.Boolean, default=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    item = db.relationship("Item", backref="project_tasks")

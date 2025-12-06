@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Project – {{ project.name }}{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>{{ project.name }}</h1>
+
+    <p class="tagline">
+        Project in <strong>{{ project.stache.name }}</strong>
+        {% if project.description %} · {{ project.description }}{% endif %}
+    </p>
+
+    <p class="stache-meta">
+        Status:
+        {% if project.status == 'completed' %}
+            Completed
+        {% elif project.status == 'in-progress' %}
+            In progress
+        {% elif project.status == 'planning' %}
+            Planning
+        {% else %}
+            {{ project.status|capitalize }}
+        {% endif %}
+        · {{ tasks|length }} task{% if tasks|length != 1 %}s{% endif %}
+    </p>
+
+    <div class="hero-actions"
+     style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+
+    <!-- Status Select + Update Button -->
+        <form method="POST"
+            action="{{ url_for('update_project_status', project_id=project.id) }}"
+            style="display: flex; align-items: center; gap: 0.5rem;">
+            <select name="status" class="input">
+                <option value="planning"
+                    {% if project.status == 'planning' %}selected{% endif %}>Planning</option>
+                <option value="in-progress"
+                    {% if project.status == 'in-progress' %}selected{% endif %}>In progress</option>
+                <option value="completed"
+                    {% if project.status == 'completed' %}selected{% endif %}>Completed</option>
+            </select>
+
+            <button type="submit" class="btn secondary" style="display: inline-flex; align-items: center; justify-content: center; height: 38px;">
+                Update Status
+            </button>
+        </form>
+
+        <!-- Edit Project -->
+        <a href="{{ url_for('edit_project', project_id=project.id) }}"
+        class="btn primary">
+            Edit Project
+        </a>
+
+        <!-- Delete Project -->
+        <form method="POST"
+            action="{{ url_for('delete_project', project_id=project.id) }}"
+            onsubmit="return confirm('Delete this project and all its tasks?');">
+            <button type="submit" class="btn danger">
+                Delete Project
+            </button>
+        </form>
+    </div>
+</section>
+
+
+<div class="content">
+    <section class="stache-layout">
+        <section class="stache-main" style="flex: 1;">
+            <div class="stache-main-header">
+                <h2>To-Do</h2>
+                <p class="stache-main-subtitle">
+                    Check off tasks as you use and organize your gear.
+                </p>
+            </div>
+
+            {% if tasks %}
+                <ul class="todo-list">
+                    {% for task in tasks %}
+                        <li class="todo-item">
+                            <form method="POST"
+                                  action="{{ url_for('toggle_project_task',
+                                                     project_id=project.id,
+                                                     task_id=task.id) }}"
+                                  style="display: flex; align-items: center; gap: 0.5rem;">
+                                <button type="submit" class="checkbox-button">
+                                    {% if task.completed %}☑{% else %}☐{% endif %}
+                                </button>
+                                <span class="{% if task.completed %}todo-completed{% endif %}">
+                                    {{ task.description }}
+                                    {% if task.item %}
+                                        <span class="tag-chip">
+                                            Linked: {{ task.item.name }}
+                                        </span>
+                                    {% endif %}
+                                </span>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No tasks yet. Add your first to-do below.</p>
+            {% endif %}
+
+            <article class="info-card item-form" style="max-width: 600px; margin-top: 1.5rem;">
+                <h3>Add Task</h3>
+                <form method="POST"
+                      action="{{ url_for('add_project_task', project_id=project.id) }}">
+                    <div class="form-group">
+                        <label>Task description</label>
+                        <input type="text" name="description" class="input"
+                               placeholder="What needs to happen next?" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Link to item (optional)</label>
+                        <select name="item_id" class="input">
+                            <option value="">No linked item</option>
+                            {% for item in items %}
+                                <option value="{{ item.id }}">{{ item.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn primary" style="margin-top: 0.5rem;">
+                        Add Task
+                    </button>
+                </form>
+            </article>
+        </section>
+    </section>
+</div>
+{% endblock %}

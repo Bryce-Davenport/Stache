@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, abort
 from datetime import datetime
 import re
 
@@ -71,14 +71,277 @@ def projects():
     if not user:
         return redirect(url_for("login"))
 
-    # Load projects from the database for the logged-in user
-    projects = Project.query.filter_by(user_id=user.id).all()
+    status_filter = request.args.get("status", "all")
+
+    query = Project.query.filter_by(user_id=user.id)
+
+    if status_filter == "in-progress":
+        query = query.filter(Project.status == "in-progress")
+    elif status_filter == "completed":
+        query = query.filter(Project.status == "completed")
+
+    projects = query.order_by(Project.created_at.desc()).all()
 
     return render_template(
         "projects.html",
         active_page="projects",
-        projects=projects
+        projects=projects,
+        status_filter=status_filter,
     )
+
+@app.route("/projects/new", methods=["GET", "POST"])
+def new_project():
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+
+    staches = (
+        Stache.query
+        .filter_by(user_id=user.id)
+        .order_by(Stache.name.asc())
+        .all()
+    )
+
+    error = None
+
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        description = request.form.get("description", "").strip()
+        stache_id = request.form.get("stache_id")
+        status = request.form.get("status") or "in-progress"
+
+        if not name:
+            error = "Project name is required."
+        elif not stache_id:
+            error = "You must select a Stache for this project."
+
+        if error:
+            return render_template(
+                "project_new.html",
+                active_page="projects",
+                staches=staches,
+                error=error,
+            )
+
+        project = Project(
+            user_id=user.id,
+            stache_id=int(stache_id),
+            name=name,
+            description=description,
+            status=status,
+        )
+        db.session.add(project)
+        db.session.commit()
+
+        return redirect(url_for("project_detail", project_id=project.id))
+
+    return render_template(
+        "project_new.html",
+        active_page="projects",
+        staches=staches,
+        error=error,
+    )
+
+@app.route("/projects/<int:project_id>")
+def project_detail(project_id):
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+
+    project = (
+        Project.query
+        .filter_by(id=project_id, user_id=user.id)
+        .first_or_404()
+    )
+
+    tasks = (
+        ProjectTask.query
+        .filter_by(project_id=project.id)
+        .order_by(ProjectTask.created_at.asc())
+        .all()
+    )
+
+    items = (
+        Item.query
+        .filter_by(stache_id=project.stache_id)
+        .order_by(Item.name.asc())
+        .all()
+    )
+
+    return render_template(
+        "project_detail.html",
+        active_page="projects",
+        project=project,
+        tasks=tasks,
+        items=items,
+    )
+
+@app.route("/projects/<int:project_id>/tasks", methods=["POST"])
+def add_project_task(project_id):
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+
+    project = (
+        Project.query
+        .filter_by(id=project_id, user_id=user.id)
+        .first_or_404()
+    )
+
+    description = request.form.get("description", "").strip()
+    item_id_raw = request.form.get("item_id") or ""
+
+    if not description:
+        # For now just bounce back; later you could flash an error.
+        return redirect(url_for("project_detail", project_id=project.id))
+
+    item_id = int(item_id_raw) if item_id_raw else None
+
+    task = ProjectTask(
+        project_id=project.id,
+        item_id=item_id,
+        description=description,
+        completed=False,
+    )
+
+    db.session.add(task)
+    db.session.commit()
+
+    return redirect(url_for("project_detail", project_id=project.id))
+
+@app.route("/projects/<int:project_id>/tasks/<int:task_id>/toggle", methods=["POST"])
+def toggle_project_task(project_id, task_id):
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+
+    task = (
+        ProjectTask.query
+        .join(Project, Project.id == ProjectTask.project_id)
+        .filter(
+            Project.id == project_id,
+            Project.user_id == user.id,
+            ProjectTask.id == task_id,
+        )
+        .first_or_404()
+    )
+
+    task.completed = not task.completed
+    db.session.commit()
+
+    return redirect(url_for("project_detail", project_id=project_id))
+
+@app.route("/projects/<int:project_id>/status", methods=["POST"])
+def update_project_status(project_id):
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+
+    project = (
+        Project.query
+        .filter_by(id=project_id, user_id=user.id)
+        .first_or_404()
+    )
+
+    status = request.form.get("status", "in-progress")
+    if status not in ("in-progress", "completed", "planning"):
+        status = "in-progress"
+
+    project.status = status
+    db.session.commit()
+
+    return redirect(url_for("project_detail", project_id=project.id))
+
+@app.route("/projects/<int:project_id>/edit", methods=["GET", "POST"])
+def edit_project(project_id):
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+
+    project = (
+        Project.query
+        .filter_by(id=project_id, user_id=user.id)
+        .first_or_404()
+    )
+
+    # user’s staches for dropdown
+    staches = (
+        Stache.query
+        .filter_by(user_id=user.id)
+        .order_by(Stache.name.asc())
+        .all()
+    )
+
+    error = None
+
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        description = request.form.get("description", "").strip()
+        stache_id = request.form.get("stache_id")
+        status = request.form.get("status") or "in-progress"
+
+        if not name:
+            error = "Project name is required."
+        elif not stache_id:
+            error = "You must select a Stache for this project."
+
+        if not error:
+            project.name = name
+            project.description = description
+            project.status = status
+            project.stache_id = int(stache_id)
+            db.session.commit()
+            return redirect(url_for("project_detail", project_id=project.id))
+
+    return render_template(
+        "project_edit.html",
+        active_page="projects",
+        project=project,
+        staches=staches,
+        error=error,
+    )
+
+@app.route("/projects/<int:project_id>/delete", methods=["POST"])
+def delete_project(project_id):
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+
+    project = (
+        Project.query
+        .filter_by(id=project_id, user_id=user.id)
+        .first_or_404()
+    )
+
+    # Remove tasks first (safe even if there are none)
+    for task in project.tasks:
+        db.session.delete(task)
+
+    db.session.delete(project)
+    db.session.commit()
+
+    return redirect(url_for("projects"))
 
 
 @app.route("/staches")

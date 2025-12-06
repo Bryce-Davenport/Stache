@@ -104,12 +104,13 @@ with app.app_context():
         )
     )
 
-    # --- Project 1: Declutter Hard Drives ---
+        # --- Project 1: Declutter Hard Drives ---
     declutter = Project(
         user_id=bryce.id,
+        stache_id=electronics.id,  # link to Electronics stache
         name="Declutter Hard Drives",
-        status="In Progress",
-        notes="Sort loose SSDs and HDDs, label everything.",
+        description="Sort loose SSDs and HDDs, label everything.",
+        status="in-progress",  # matches filter values
     )
     db.session.add(declutter)
     db.session.commit()
@@ -124,9 +125,10 @@ with app.app_context():
     # --- Project 2: Dial In Camping Cook Kit ---
     camping_project = Project(
         user_id=bryce.id,
+        stache_id=camping.id,  # link to Camping stache
         name="Dial In Camping Cook Kit",
-        status="Planning",
-        notes="Consolidate stoves, pots, and utensils into one bin.",
+        description="Consolidate stoves, pots, and utensils into one bin.",
+        status="in-progress",  # also shows under “In progress”
     )
     db.session.add(camping_project)
     db.session.commit()
@@ -137,6 +139,7 @@ with app.app_context():
         ProjectTask(project_id=camping_project.id, description="Create 'Camping Kitchen' stache"),
         ProjectTask(project_id=camping_project.id, description="Add items and locations"),
     ])
+
 
     db.session.commit()
     print("Dev database seeded with demo data.")
