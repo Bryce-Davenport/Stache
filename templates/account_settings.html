@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Account Settings – Stache{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Account Settings</h1>
+    <p class="tagline">
+        Manage your Stache account security.
+    </p>
+</section>
+
+<div class="content">
+    <div class="auth-card" style="max-width: 700px; margin: 0 auto;">
+        {% if error %}
+            <div class="alert alert-warning" style="margin-bottom: 1rem;">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        {% if success %}
+            <div class="alert alert-success" style="margin-bottom: 1rem;">
+                {{ success }}
+            </div>
+        {% endif %}
+
+        <h2>Change password</h2>
+        <p class="stache-main-subtitle">
+            Update the password you use to sign in to Stache.
+        </p>
+
+        <form method="POST" action="{{ url_for('account_settings') }}" style="margin-top: 1rem;">
+            <div class="form-group">
+                <label for="current_password">Current password</label>
+                <input id="current_password"
+                       name="current_password"
+                       type="password"
+                       class="input"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="new_password">New password</label>
+                <input id="new_password"
+                       name="new_password"
+                       type="password"
+                       class="input"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password">Confirm new password</label>
+                <input id="confirm_password"
+                       name="confirm_password"
+                       type="password"
+                       class="input"
+                       required>
+            </div>
+
+            <button type="submit"
+                    class="btn primary"
+                    style="margin-top: 1rem; width: 100%;">
+                Update password
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

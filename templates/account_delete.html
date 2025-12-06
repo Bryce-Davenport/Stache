@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Account – Stache{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Delete Account</h1>
+    <p class="tagline" style="color: #f97373;">
+        This will permanently delete your account and all of your Staches, items, and projects.
+    </p>
+</section>
+
+<div class="content">
+    <div class="auth-card" style="max-width: 700px; margin: 0 auto;">
+        {% if error %}
+            <div class="alert alert-warning" style="margin-bottom: 1rem;">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <p style="margin-bottom: 1rem;">
+            This action <strong>cannot be undone</strong>. All of the following will be deleted:
+        </p>
+        <ul style="margin-bottom: 1rem; padding-left: 1.25rem;">
+            <li>Your account</li>
+            <li>All of your Staches</li>
+            <li>All items in those Staches</li>
+            <li>All of your projects and project tasks</li>
+        </ul>
+
+        <p style="margin-bottom: 1rem;">
+            To confirm, please enter your account password:
+        </p>
+
+        <form method="POST" action="{{ url_for('account_delete') }}">
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input id="password"
+                       name="password"
+                       type="password"
+                       class="input"
+                       required>
+            </div>
+
+            <button type="submit"
+                    class="btn danger"
+                    style="margin-top: 1rem; width: 100%;">
+                Permanently delete my account
+            </button>
+        </form>
+
+        <p style="margin-top: 1.25rem; text-align: center;">
+            <a href="{{ url_for('account_profile') }}">Cancel and go back to Profile</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

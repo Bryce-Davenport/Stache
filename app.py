@@ -1,57 +1,61 @@
 from flask import Flask, render_template, request, redirect, url_for, session, abort
 from datetime import datetime
 import re
+import os
 
-
+from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Stache, Item, Project, ProjectTask
 
 app = Flask(__name__)
+
+# --- Sessions / security ---
+app.config["SECRET_KEY"] = os.environ.get("STACHE_SECRET_KEY", "dev-secret-change-me")
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+# app.config["SESSION_COOKIE_SECURE"] = True  # enable later when using HTTPS
 
 # SQLite now, Postgres later
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///stache.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# -- Development Only --
-app.secret_key = "change_this_secret_key_later"
-
-# Initialize SQLAlchemy with this app
+# *** IMPORTANT: register this Flask app with SQLAlchemy ***
 db.init_app(app)
 
 
 # ----- Helpers -----
 def is_logged_in():
     """Return True if a user is logged in based on the session."""
-    return "user" in session
+    return "user_id" in session
 
 
 def get_current_user():
     """Return the current User object from the database, or None."""
-    username = session.get("user")
-    if not username:
+    user_id = session.get("user_id")
+    if not user_id:
         return None
-    return User.query.filter_by(username=username).first()
+    return User.query.get(user_id)
 
 
 @app.context_processor
 def inject_user():
-    """Inject login state and current user into all templates."""
+    """Inject login state and current user info into all templates."""
     return dict(
         logged_in=is_logged_in(),
-        current_user=session.get("user")
+        current_username=session.get("username"),  # for display in navbar
     )
+
 
 def slugify(name: str) -> str:
     base = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "stache"
 
     slug = base
     counter = 2
-    # If you ever want per-user uniqueness, also filter by user_id here.
+    
     while Stache.query.filter_by(slug=slug).first() is not None:
         slug = f"{base}-{counter}"
         counter += 1
 
     return slug
-
 
 
 # ----- Routes -----
@@ -62,6 +66,7 @@ def home():
     return render_template("home.html", active_page="home")
 
 
+# ---------- Projects ----------
 @app.route("/projects")
 def projects():
     if not is_logged_in():
@@ -79,6 +84,8 @@ def projects():
         query = query.filter(Project.status == "in-progress")
     elif status_filter == "completed":
         query = query.filter(Project.status == "completed")
+    elif status_filter == "planning":
+        query = query.filter(Project.status == "planning")
 
     projects = query.order_by(Project.created_at.desc()).all()
 
@@ -88,6 +95,7 @@ def projects():
         projects=projects,
         status_filter=status_filter,
     )
+
 
 @app.route("/projects/new", methods=["GET", "POST"])
 def new_project():
@@ -145,6 +153,7 @@ def new_project():
         error=error,
     )
 
+
 @app.route("/projects/<int:project_id>")
 def project_detail(project_id):
     if not is_logged_in():
@@ -182,6 +191,60 @@ def project_detail(project_id):
         items=items,
     )
 
+@app.route("/projects/<int:project_id>/edit", methods=["GET", "POST"])
+def edit_project(project_id):
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+
+    # Make sure this project belongs to the logged-in user
+    project = (
+        Project.query
+        .filter_by(id=project_id, user_id=user.id)
+        .first_or_404()
+    )
+
+    # Staches for dropdown 
+    staches = (
+        Stache.query
+        .filter_by(user_id=user.id)
+        .order_by(Stache.name.asc())
+        .all()
+    )
+
+    error = None
+
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        description = request.form.get("description", "").strip()
+        stache_id = request.form.get("stache_id")
+        status = request.form.get("status") or project.status
+
+        if not name:
+            error = "Project name is required."
+        elif not stache_id:
+            error = "You must select a Stache for this project."
+
+        if not error:
+            project.name = name
+            project.description = description
+            project.stache_id = int(stache_id)
+            project.status = status
+            db.session.commit()
+            return redirect(url_for("project_detail", project_id=project.id))
+
+    return render_template(
+        "project_edit.html",
+        active_page="projects",
+        project=project,
+        staches=staches,
+        error=error,
+    )
+
+
 @app.route("/projects/<int:project_id>/tasks", methods=["POST"])
 def add_project_task(project_id):
     if not is_logged_in():
@@ -197,22 +260,18 @@ def add_project_task(project_id):
         .first_or_404()
     )
 
-    description = request.form.get("description", "").strip()
-    item_id_raw = request.form.get("item_id") or ""
+    title = request.form.get("title", "").strip()
+    item_id = request.form.get("item_id")
 
-    if not description:
-        # For now just bounce back; later you could flash an error.
+    if not title:
+        # If no title, just reload project page
         return redirect(url_for("project_detail", project_id=project.id))
-
-    item_id = int(item_id_raw) if item_id_raw else None
 
     task = ProjectTask(
         project_id=project.id,
-        item_id=item_id,
-        description=description,
-        completed=False,
+        title=title,
+        item_id=int(item_id) if item_id else None,
     )
-
     db.session.add(task)
     db.session.commit()
 
@@ -227,21 +286,24 @@ def toggle_project_task(project_id, task_id):
     if not user:
         return redirect(url_for("login"))
 
+    # Make sure this task belongs to a project owned by the current user
     task = (
         ProjectTask.query
-        .join(Project, Project.id == ProjectTask.project_id)
+        .join(Project)
         .filter(
-            Project.id == project_id,
-            Project.user_id == user.id,
             ProjectTask.id == task_id,
+            ProjectTask.project_id == project_id,
+            Project.user_id == user.id,
         )
         .first_or_404()
     )
 
-    task.completed = not task.completed
+    # Toggle completion flag 
+    task.completed = not bool(task.completed)
     db.session.commit()
 
     return redirect(url_for("project_detail", project_id=project_id))
+
 
 @app.route("/projects/<int:project_id>/status", methods=["POST"])
 def update_project_status(project_id):
@@ -258,102 +320,12 @@ def update_project_status(project_id):
         .first_or_404()
     )
 
-    status = request.form.get("status", "in-progress")
-    if status not in ("in-progress", "completed", "planning"):
-        status = "in-progress"
-
-    project.status = status
-    db.session.commit()
+    new_status = request.form.get("status", "").strip()
+    if new_status in ["in-progress", "completed"]:
+        project.status = new_status
+        db.session.commit()
 
     return redirect(url_for("project_detail", project_id=project.id))
-
-@app.route("/projects/<int:project_id>/edit", methods=["GET", "POST"])
-def edit_project(project_id):
-    if not is_logged_in():
-        return redirect(url_for("login"))
-
-    user = get_current_user()
-    if not user:
-        return redirect(url_for("login"))
-
-    project = (
-        Project.query
-        .filter_by(id=project_id, user_id=user.id)
-        .first_or_404()
-    )
-
-    # user’s staches for dropdown
-    staches = (
-        Stache.query
-        .filter_by(user_id=user.id)
-        .order_by(Stache.name.asc())
-        .all()
-    )
-
-    # Load existing tasks for this project, oldest first
-    tasks = (
-        ProjectTask.query
-        .filter_by(project_id=project.id)
-        .order_by(ProjectTask.created_at.asc())
-        .all()
-    )
-
-    # Default text for the textarea: one task per line
-    tasks_text = "\n".join(t.description for t in tasks)
-
-    error = None
-
-    if request.method == "POST":
-        name = request.form.get("name", "").strip()
-        description = request.form.get("description", "").strip()
-        stache_id = request.form.get("stache_id")
-        status = request.form.get("status") or "in-progress"
-        tasks_text = request.form.get("tasks_text", "")
-
-        if not name:
-            error = "Project name is required."
-        elif not stache_id:
-            error = "You must select a Stache for this project."
-
-        if not error:
-            # Update core project fields
-            project.name = name
-            project.description = description
-            project.status = status
-            project.stache_id = int(stache_id)
-
-            # --- Rebuild the task list from textarea ---
-            # Each non-empty line becomes one task. We reset completion state.
-            # (Simple mental model: what you see in this box IS the checklist.)
-            # First, delete existing tasks for this project:
-            existing_tasks = ProjectTask.query.filter_by(project_id=project.id).all()
-            for t in existing_tasks:
-                db.session.delete(t)
-
-            # Then recreate tasks from lines:
-            lines = [line.strip() for line in tasks_text.splitlines()]
-            for line in lines:
-                if not line:
-                    continue
-                new_task = ProjectTask(
-                    project_id=project.id,
-                    description=line,
-                    completed=False,
-                )
-                db.session.add(new_task)
-
-            db.session.commit()
-            return redirect(url_for("project_detail", project_id=project.id))
-
-    # GET or validation error → show form
-    return render_template(
-        "project_edit.html",
-        active_page="projects",
-        project=project,
-        staches=staches,
-        error=error,
-        tasks_text=tasks_text,
-    )
 
 
 @app.route("/projects/<int:project_id>/delete", methods=["POST"])
@@ -371,7 +343,7 @@ def delete_project(project_id):
         .first_or_404()
     )
 
-    # Remove tasks first (safe even if there are none)
+    # Remove tasks first
     for task in project.tasks:
         db.session.delete(task)
 
@@ -381,6 +353,7 @@ def delete_project(project_id):
     return redirect(url_for("projects"))
 
 
+# ---------- Staches ----------
 @app.route("/staches")
 def staches():
     if not is_logged_in():
@@ -396,8 +369,9 @@ def staches():
     return render_template(
         "staches.html",
         active_page="staches",
-        staches=staches
+        staches=staches,
     )
+
 
 @app.route("/staches/new", methods=["GET", "POST"])
 def new_stache():
@@ -443,7 +417,6 @@ def new_stache():
     return render_template("staches_new.html", active_page="staches")
 
 
-
 @app.route("/staches/<stache_slug>")
 def stache_detail(stache_slug):
     if not is_logged_in():
@@ -476,6 +449,89 @@ def stache_detail(stache_slug):
     )
 
 
+@app.route("/staches/<stache_slug>/edit", methods=["GET", "POST"])
+def edit_stache(stache_slug):
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+
+    # Make sure this stache belongs to the logged-in user
+    stache = (
+        Stache.query
+        .filter_by(user_id=user.id, slug=stache_slug)
+        .first_or_404()
+    )
+
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        description = request.form.get("description", "").strip()
+        locations = request.form.get("locations", "").strip()
+        tags = request.form.get("tags", "").strip()
+
+        if not name:
+            error = "Stache name is required."
+            tags_string = tags
+            return render_template(
+                "stache_edit.html",
+                stache=stache,
+                tags_string=tags_string,
+                error=error,
+                active_page="staches",
+            )
+
+        # Update fields (keep slug stable so URLs don’t change)
+        stache.name = name
+        stache.description = description
+        stache.locations = locations
+        stache.tags_csv = ",".join([t.strip() for t in tags.split(",") if t.strip()])
+
+        db.session.commit()
+
+        return redirect(url_for("stache_detail", stache_slug=stache.slug))
+
+    # GET: pre-fill tags for the form
+    tags_string = ", ".join(stache.tags) if getattr(stache, "tags", None) else ""
+
+    return render_template(
+        "stache_edit.html",
+        stache=stache,
+        tags_string=tags_string,
+        active_page="staches",
+    )
+
+
+@app.route("/staches/<stache_slug>/delete", methods=["POST"])
+def delete_stache(stache_slug):
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+
+    # Make sure the stache belongs to this user
+    stache = (
+        Stache.query
+        .filter_by(user_id=user.id, slug=stache_slug)
+        .first_or_404()
+    )
+
+    # Delete all items in this stache (safe even if there are none)
+    items = Item.query.filter_by(stache_id=stache.id).all()
+    for item in items:
+        db.session.delete(item)
+
+    # Delete the stache itself
+    db.session.delete(stache)
+    db.session.commit()
+
+    return redirect(url_for("staches"))
+
+
+# ---------- Items ----------
 @app.route("/items")
 def items():
     if not is_logged_in():
@@ -498,6 +554,7 @@ def items():
         active_page="items",
         items=items,
     )
+
 
 @app.route("/items/new", methods=["GET", "POST"])
 def new_item():
@@ -529,11 +586,11 @@ def new_item():
                 "items_new.html",
                 staches=staches,
                 error=error,
-                active_page="items"
+                active_page="items",
             )
 
         # Create item
-        new_item = Item(
+        new_item_obj = Item(
             name=name,
             stache_id=int(stache_id),
             category=category,
@@ -542,7 +599,7 @@ def new_item():
             tags_csv=tags_csv,
         )
 
-        db.session.add(new_item)
+        db.session.add(new_item_obj)
         db.session.commit()
 
         return redirect(url_for("items"))
@@ -550,8 +607,9 @@ def new_item():
     return render_template(
         "items_new.html",
         staches=staches,
-        active_page="items"
+        active_page="items",
     )
+
 
 @app.route("/items/<int:item_id>")
 def item_detail(item_id):
@@ -597,6 +655,7 @@ def delete_item(item_id):
     db.session.commit()
 
     return redirect(url_for("items"))
+
 
 @app.route("/items/<int:item_id>/edit", methods=["GET", "POST"])
 def edit_item(item_id):
@@ -662,61 +721,54 @@ def edit_item(item_id):
         active_page="items",
     )
 
-@app.route("/staches/<stache_slug>/edit", methods=["GET", "POST"])
-def edit_stache(stache_slug):
-    if not is_logged_in():
-        return redirect(url_for("login"))
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    # If already logged in, don't show register page
+    if is_logged_in():
+        return redirect(url_for("home"))
 
-    user = get_current_user()
-    if not user:
-        return redirect(url_for("login"))
-
-    # Make sure this stache belongs to the logged-in user
-    stache = (
-        Stache.query
-        .filter_by(user_id=user.id, slug=stache_slug)
-        .first_or_404()
-    )
+    error = None
 
     if request.method == "POST":
-        name = request.form.get("name", "").strip()
-        description = request.form.get("description", "").strip()
-        locations = request.form.get("locations", "").strip()
-        tags = request.form.get("tags", "").strip()
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm_password", "")
 
-        if not name:
-            error = "Stache name is required."
-            tags_string = tags
-            return render_template(
-                "stache_edit.html",
-                stache=stache,
-                tags_string=tags_string,
-                error=error,
-                active_page="staches",
-            )
+        # Basic validation
+        if not username or not password or not confirm:
+            error = "Please fill in all fields."
+        elif len(username) < 3 or len(username) > 32:
+            error = "Username must be between 3 and 32 characters."
+        elif not re.match(r"^[A-Za-z0-9_]+$", username):
+            error = "Username can only contain letters, numbers, and underscores."
+        elif len(password) < 8:
+            error = "Password must be at least 8 characters long."
+        elif password != confirm:
+            error = "Passwords do not match."
+        else:
+            # Check if username is already taken
+            existing = User.query.filter_by(username=username).first()
+            if existing:
+                error = "That username is already taken."
+            else:
+                # Create the new user
+                user = User(
+                    username=username,
+                    password_hash=generate_password_hash(password),
+                )
+                db.session.add(user)
+                db.session.commit()
 
-        # Update fields (keep slug stable so URLs don’t change)
-        stache.name = name
-        stache.description = description
-        stache.locations = locations
-        stache.tags_csv = ",".join([t.strip() for t in tags.split(",") if t.strip()])
+                # Log them in immediately
+                session["user_id"] = user.id
+                session["username"] = user.username
 
-        db.session.commit()
+                return redirect(url_for("home"))
 
-        return redirect(url_for("stache_detail", stache_slug=stache.slug))
+    return render_template("register.html", error=error)
 
-    # GET: pre-fill tags for the form
-    tags_string = ", ".join(stache.tags) if getattr(stache, "tags", None) else ""
-
-    return render_template(
-        "stache_edit.html",
-        stache=stache,
-        tags_string=tags_string,
-        active_page="staches",
-    )
-
-@app.route("/staches/<stache_slug>/delete", methods=["POST"])
-def delete_stache(stache_slug):
+@app.route("/account/profile")
+def account_profile():
     if not is_logged_in():
         return redirect(url_for("login"))
 
@@ -724,25 +776,115 @@ def delete_stache(stache_slug):
     if not user:
         return redirect(url_for("login"))
 
-    # Make sure the stache belongs to this user
-    stache = (
-        Stache.query
-        .filter_by(user_id=user.id, slug=stache_slug)
-        .first_or_404()
+    # Basic stats for this user
+    stache_count = Stache.query.filter_by(user_id=user.id).count()
+    project_count = Project.query.filter_by(user_id=user.id).count()
+    item_count = (
+        Item.query
+        .join(Stache)
+        .filter(Stache.user_id == user.id)
+        .count()
     )
 
-    # Delete all items in this stache (safe even if there are none)
-    items = Item.query.filter_by(stache_id=stache.id).all()
-    for item in items:
-        db.session.delete(item)
+    return render_template(
+        "account_profile.html",
+        active_page="account",
+        user=user,
+        stache_count=stache_count,
+        project_count=project_count,
+        item_count=item_count,
+    )
 
-    # Delete the stache itself
-    db.session.delete(stache)
-    db.session.commit()
+@app.route("/account/settings", methods=["GET", "POST"])
+def account_settings():
+    if not is_logged_in():
+        return redirect(url_for("login"))
 
-    return redirect(url_for("staches"))
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+
+    error = None
+    success = None
+
+    if request.method == "POST":
+        current_password = request.form.get("current_password", "")
+        new_password = request.form.get("new_password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        # Basic validation
+        if not current_password or not new_password or not confirm_password:
+            error = "Please fill in all fields."
+        elif not check_password_hash(user.password_hash, current_password):
+            error = "Current password is incorrect."
+        elif len(new_password) < 8:
+            error = "New password must be at least 8 characters long."
+        elif new_password != confirm_password:
+            error = "New password and confirmation do not match."
+        else:
+            user.password_hash = generate_password_hash(new_password)
+            db.session.commit()
+            success = "Your password has been updated."
+
+    return render_template(
+        "account_settings.html",
+        active_page="account",
+        user=user,
+        error=error,
+        success=success,
+    )
+
+@app.route("/account/delete", methods=["GET", "POST"])
+def account_delete():
+    if not is_logged_in():
+        return redirect(url_for("login"))
+
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+
+    error = None
+
+    if request.method == "POST":
+        password = request.form.get("password", "")
+
+        # Verify password
+        if not check_password_hash(user.password_hash, password):
+            error = "Password is incorrect."
+        else:
+            # --- Delete ALL data associated with this user ---
+
+            # 1) Delete all project tasks for this user's projects
+            projects = Project.query.filter_by(user_id=user.id).all()
+            for project in projects:
+                for task in project.tasks:
+                    db.session.delete(task)
+                db.session.delete(project)
+
+            # 2) Delete all items + staches
+            staches = Stache.query.filter_by(user_id=user.id).all()
+            for stache in staches:
+                items = Item.query.filter_by(stache_id=stache.id).all()
+                for item in items:
+                    db.session.delete(item)
+                db.session.delete(stache)
+
+            # 3) Finally, delete the user
+            db.session.delete(user)
+            db.session.commit()
+
+            # 4) Clear session and send them to login
+            session.clear()
+            return redirect(url_for("login"))
+
+    return render_template(
+        "account_delete.html",
+        active_page="account",
+        error=error,
+    )
 
 
+# ---------- Auth ----------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error = None
@@ -751,20 +893,24 @@ def login():
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "").strip()
 
-        # TEMPORARY: hardcoded credentials, but user row is stored in DB
-        # Later this will check a database-stored password hash.
-        if username == "bryce" and password == "stache123":
-            # Ensure a matching User row exists in the database
-            user = User.query.filter_by(username=username).first()
-            if not user:
-                user = User(username=username, password_hash="dev-only")
-                db.session.add(user)
-                db.session.commit()
-
-            session["user"] = username
-            return redirect(url_for("home"))
+        if not username or not password:
+            error = "Please enter both username and password."
         else:
-            error = "Invalid username or password."
+            # Look up user by username
+            user = User.query.filter_by(username=username).first()
+
+            # Generic error message on failure
+            if not user or not user.password_hash:
+                error = "Invalid username or password."
+            else:
+                # Verify the password against the stored hash
+                if check_password_hash(user.password_hash, password):
+                    # Success: store identity in the session
+                    session["user_id"] = user.id
+                    session["username"] = user.username
+                    return redirect(url_for("home"))
+                else:
+                    error = "Invalid username or password."
 
     # GET request or failed POST
     return render_template("login.html", error=error)
@@ -772,10 +918,10 @@ def login():
 
 @app.route("/logout")
 def logout():
-    session.pop("user", None)
+    session.pop("user_id", None)
+    session.pop("username", None)
     return redirect(url_for("login"))
 
 
 if __name__ == "__main__":
-    # Requires models.py + seed_dev.py already run to create stache.db
-    app.run(debug=True, port=8000)  # http:127.0.0.1:8000
+    app.run(debug=True)

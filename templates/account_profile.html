@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Account Profile – Stache{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Account Profile</h1>
+    <p class="tagline">
+        Signed in as <strong>{{ user.username }}</strong>.
+    </p>
+</section>
+
+<div class="content">
+    <div class="info-card" style="max-width: 700px; margin: 0 auto;">
+        <h2>Your Stache at a glance</h2>
+        <p class="stache-main-subtitle">
+            A quick overview of everything tied to your account.
+        </p>
+
+        <ul class="profile-stats">
+            <li><strong>Staches:</strong> {{ stache_count }}</li>
+            <li><strong>Items:</strong> {{ item_count }}</li>
+            <li><strong>Projects:</strong> {{ project_count }}</li>
+        </ul>
+
+        <hr style="margin: 1.5rem 0; border-color: #1f2937;">
+
+        <h3>Quick actions</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.5rem;">
+            <a class="btn primary" href="{{ url_for('staches') }}">View your staches</a>
+            <a class="btn secondary" href="{{ url_for('items') }}">View your items</a>
+            <a class="btn secondary" href="{{ url_for('projects') }}">View your projects</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

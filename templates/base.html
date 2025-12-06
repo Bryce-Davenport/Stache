@@ -6,7 +6,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
-<!-- NEW: make body a full-height flex column -->
 <body style="min-height: 100vh; display: flex; flex-direction: column;">
 
     <header class="navbar">
@@ -44,11 +43,21 @@
 
                     <div class="account-dropdown">
                         <div class="account-header">
-                            Signed in as <span class="account-name">{{ current_user }}</span>
+                            Signed in as <span class="account-name">{{ current_username }}</span>
                         </div>
 
-                        <a href="#" class="account-item">Profile (Coming Soon)</a>
-                        <a href="#" class="account-item">Settings (Coming Soon)</a>
+                        <a href="{{ url_for('account_profile') }}" class="account-item">
+                            Profile
+                        </a>
+
+                        <a href="{{ url_for('account_settings') }}" class="account-item">
+                            Settings
+                        </a>
+
+                        <a href="{{ url_for('account_delete') }}" class="account-item" style="color: #f97373;">
+                            Delete account
+                        </a>
+
 
                         <a href="{{ url_for('logout') }}" class="account-item account-logout">
                             Logout
@@ -63,7 +72,6 @@
         </nav>
     </header>
 
-    <!-- NEW: let main stretch to fill vertical space -->
     <main class="content" style="flex: 1;">
         {% block content %}{% endblock %}
     </main>
