@@ -290,6 +290,17 @@ def edit_project(project_id):
         .all()
     )
 
+    # Load existing tasks for this project, oldest first
+    tasks = (
+        ProjectTask.query
+        .filter_by(project_id=project.id)
+        .order_by(ProjectTask.created_at.asc())
+        .all()
+    )
+
+    # Default text for the textarea: one task per line
+    tasks_text = "\n".join(t.description for t in tasks)
+
     error = None
 
     if request.method == "POST":
@@ -297,6 +308,7 @@ def edit_project(project_id):
         description = request.form.get("description", "").strip()
         stache_id = request.form.get("stache_id")
         status = request.form.get("status") or "in-progress"
+        tasks_text = request.form.get("tasks_text", "")
 
         if not name:
             error = "Project name is required."
@@ -304,20 +316,45 @@ def edit_project(project_id):
             error = "You must select a Stache for this project."
 
         if not error:
+            # Update core project fields
             project.name = name
             project.description = description
             project.status = status
             project.stache_id = int(stache_id)
+
+            # --- Rebuild the task list from textarea ---
+            # Each non-empty line becomes one task. We reset completion state.
+            # (Simple mental model: what you see in this box IS the checklist.)
+            # First, delete existing tasks for this project:
+            existing_tasks = ProjectTask.query.filter_by(project_id=project.id).all()
+            for t in existing_tasks:
+                db.session.delete(t)
+
+            # Then recreate tasks from lines:
+            lines = [line.strip() for line in tasks_text.splitlines()]
+            for line in lines:
+                if not line:
+                    continue
+                new_task = ProjectTask(
+                    project_id=project.id,
+                    description=line,
+                    completed=False,
+                )
+                db.session.add(new_task)
+
             db.session.commit()
             return redirect(url_for("project_detail", project_id=project.id))
 
+    # GET or validation error → show form
     return render_template(
         "project_edit.html",
         active_page="projects",
         project=project,
         staches=staches,
         error=error,
+        tasks_text=tasks_text,
     )
+
 
 @app.route("/projects/<int:project_id>/delete", methods=["POST"])
 def delete_project(project_id):

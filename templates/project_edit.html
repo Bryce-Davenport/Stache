@@ -15,7 +15,9 @@
         <p style="color: #f87171; margin-bottom: 1rem;">{{ error }}</p>
     {% endif %}
 
-    <form method="POST" class="info-card item-form" style="max-width: 700px; margin: 0 auto;">
+    <form method="POST"
+          class="info-card item-form"
+          style="max-width: 700px; margin: 0 auto;">
         <div class="stache-card-header">
             <h2>Project Details</h2>
             <span class="chevron">❯</span>
@@ -28,8 +30,8 @@
                 type="text"
                 name="name"
                 class="input"
-                required
                 value="{{ project.name }}"
+                required
             >
         </div>
 
@@ -51,25 +53,49 @@
                 <option value="">Select a stache…</option>
                 {% for stache in staches %}
                     <option value="{{ stache.id }}"
-                        {% if project.stache_id == stache.id %}selected{% endif %}>
+                        {% if stache.id == project.stache_id %}selected{% endif %}>
                         {{ stache.name }}
                     </option>
                 {% endfor %}
             </select>
         </div>
 
-        <!-- Status (keep in sync with other status options) -->
+        <!-- Status -->
         <div class="form-group">
             <label>Status</label>
             <select name="status" class="input">
-                <option value="planning" {% if project.status == "planning" %}selected{% endif %}>Planning</option>
-                <option value="in_progress" {% if project.status == "in_progress" %}selected{% endif %}>In progress</option>
-                <option value="completed" {% if project.status == "completed" %}selected{% endif %}>Completed</option>
+                <option value="planning" {% if project.status == "planning" %}selected{% endif %}>
+                    Planning
+                </option>
+                <option value="in-progress" {% if project.status == "in-progress" %}selected{% endif %}>
+                    In progress
+                </option>
+                <option value="completed" {% if project.status == "completed" %}selected{% endif %}>
+                    Completed
+                </option>
             </select>
         </div>
 
+        <!-- NEW: To-Do List editor -->
+        <div class="form-group">
+            <label>To-Do List</label>
+            <p style="font-size: 0.85rem; color: #9ca3af; margin-top: 0.25rem;">
+                One task per line. Saving will replace the current checklist for this project.
+            </p>
+            <textarea
+                name="tasks_text"
+                class="input"
+                rows="6"
+                placeholder="Example:
+Gather all loose drives
+Check SMART status
+Label and store in NAS bin"
+            >{{ tasks_text or "" }}</textarea>
+        </div>
+
         <div class="detail-actions">
-            <a href="{{ url_for('project_detail', project_id=project.id) }}" class="btn secondary">
+            <a href="{{ url_for('project_detail', project_id=project.id) }}"
+               class="btn secondary">
                 Cancel
             </a>
             <button type="submit" class="btn primary">
